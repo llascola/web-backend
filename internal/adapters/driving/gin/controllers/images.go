@@ -42,3 +42,7 @@ func (c *ImageController) UploadImage(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"url": url})
 }
+
+func (c *ImageController) UploadConfig(ctx *gin.Context) {
+	ctx.JSON(http.StatusNotImplemented, gin.H{"error": "Not implemented"})
+}

@@ -1,0 +1,60 @@
+services:
+  backend:
+    build: .
+    networks:
+      - web-page
+    ports:
+      - "8001:8001"
+    environment:
+      - POSTGRES_HOST
+      - POSTGRES_PORT
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_SSLMODE
+      - MINIO_ENDPOINT
+      - MINIO_BUCKET
+      - MINIO_ROOT_USER
+      - MINIO_ROOT_PASSWORD
+      - JWT_SECRET
+      - JWT_KEY_ID
+      - JWT_ALGORITHM
+    depends_on:
+      - postgres
+      - minio
+
+  postgres:
+    image: postgres:15-alpine
+    networks:
+      - web-page
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    networks:
+      - web-page
+    environment:
+      - MINIO_ROOT_USER
+      - MINIO_ROOT_PASSWORD
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+volumes:
+  postgres_data:
+  minio_data:
+
+
+networks:
+  web-page:
+    external: true

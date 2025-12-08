@@ -12,7 +12,12 @@ RUN go mod download
 COPY . .
 
 # Build the binary named 'server'
-RUN go build -o server main.go
+RUN go build -o server .
+
+# Compilar
+# - CGO_ENABLED=0: Evita el error "greyobject" y problemas con musl
+# -ldflags="-s -w": Reduce el tamaño del binario quitando info de debug
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o server .
 
 # --- Stage 2: Runner ---
 FROM alpine:latest
@@ -26,4 +31,4 @@ COPY --from=builder /app/server .
 EXPOSE 8080
 
 # Run the app
-CMD ["./server"]
+CMD ["./server", "serve"]

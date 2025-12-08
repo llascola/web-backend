@@ -1,4 +1,4 @@
-package api
+package ginadapter
 
 import (
 	"net/http"
@@ -9,11 +9,13 @@ import (
 	"github.com/llascola/web-backend/internal/adapters/driving/gin/controllers"
 	"github.com/llascola/web-backend/internal/adapters/driving/gin/middleware"
 	"github.com/llascola/web-backend/internal/app"
+	"github.com/llascola/web-backend/internal/app/domain"
+	"github.com/llascola/web-backend/internal/config"
 	"go.uber.org/zap"
 )
 
 // NewRouter initializes the Gin engine with middleware and routes
-func NewRouter(app *app.Application) *gin.Engine {
+func NewGinRouter(app *app.Application, cfg *config.Config) *gin.Engine {
 	// Initialize Zap Logger
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
@@ -34,6 +36,8 @@ func NewRouter(app *app.Application) *gin.Engine {
 
 	// Controllers
 	imageController := controllers.NewImageController(app.Service.ImageService)
+	userController := controllers.NewUserController(app.Service.UserService)
+	authController := controllers.NewAuthController(app.Service.AuthService)
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "API Root - Go to /status"})
@@ -47,7 +51,31 @@ func NewRouter(app *app.Application) *gin.Engine {
 		})
 	})
 
-	r.POST("/upload", imageController.UploadImage)
+	// Public Routes
+	authGroup := r.Group("/auth")
+	{
+		authGroup.POST("/login", authController.Login)
+		authGroup.POST("/register", authController.Register) // Anyone can register
+	}
+
+	// Protected Routes (Must be logged in)
+	api := r.Group("/api")
+	api.Use(middleware.AuthMiddleware(cfg.JWTKeys))
+
+	// 1. Member Routes (Any logged in user)
+	api.GET("/profile", userController.GetProfile)
+
+	// 2. Admin Routes (Only Admins)
+	admin := api.Group("/admin")
+	admin.Use(middleware.RequireRole(domain.RoleAdmin)) // <--- Blocks non-admins
+	{
+		admin.DELETE("/users/:id", userController.DeleteUser)
+		admin.GET("/hola-mundo", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"message": "Hola Mundo"})
+		})
+		admin.POST("/upload-system-config", imageController.UploadConfig)
+		admin.POST("/upload-image", imageController.UploadImage)
+	}
 
 	return r
 }
