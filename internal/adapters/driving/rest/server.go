@@ -1,11 +1,9 @@
-package http
+package rest
 
 import (
 	"context"
 	"net/http"
-	"time"
 
-	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -13,12 +11,11 @@ type Server struct {
 	srv *http.Server
 }
 
-func NewServer(router *gin.Engine) *Server {
+func NewServer(handler http.Handler) *Server {
 	return &Server{
 		srv: &http.Server{
-			Addr:              ":8001",
-			Handler:           router,
-			ReadHeaderTimeout: 10 * time.Second,
+			Addr:    ":8080",
+			Handler: handler,
 		},
 	}
 }

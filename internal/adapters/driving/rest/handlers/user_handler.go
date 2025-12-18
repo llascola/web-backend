@@ -1,22 +1,14 @@
-package controllers
+package handlers
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/llascola/web-backend/internal/app/inports"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-type UserController struct {
-	userService inports.UserService
-}
-
-func NewUserController(userService inports.UserService) *UserController {
-	return &UserController{userService: userService}
-}
-
-func (c *UserController) GetProfile(ctx *gin.Context) {
+func (h *Handler) GetProfile(ctx *gin.Context) {
 	userIDStr, exists := ctx.Get("userID")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -32,7 +24,7 @@ func (c *UserController) GetProfile(ctx *gin.Context) {
 		return
 	}
 
-	user, err := c.userService.GetProfile(ctx, userID)
+	user, err := h.userService.GetProfile(ctx, userID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
@@ -46,15 +38,8 @@ func (c *UserController) GetProfile(ctx *gin.Context) {
 	})
 }
 
-func (c *UserController) DeleteUser(ctx *gin.Context) {
-	idParam := ctx.Param("id")
-	userID, err := uuid.Parse(idParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-		return
-	}
-
-	if err := c.userService.DeleteUser(ctx, userID); err != nil {
+func (h *Handler) DeleteUser(ctx *gin.Context, id openapi_types.UUID) {
+	if err := h.userService.DeleteUser(ctx, id); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

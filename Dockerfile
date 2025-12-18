@@ -26,6 +26,8 @@ WORKDIR /root/
 
 # Copy only the compiled binary from the builder stage
 COPY --from=builder /app/server .
+COPY --from=builder /app/openapi ./openapi
+COPY --from=builder /app/docs ./docs
 
 # Expose the port
 EXPOSE 8080

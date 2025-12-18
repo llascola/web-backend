@@ -1,4 +1,4 @@
-package ginadapter
+package rest
 
 import (
 	"net/http"
@@ -6,8 +6,9 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/llascola/web-backend/internal/adapters/driving/gin/controllers"
-	"github.com/llascola/web-backend/internal/adapters/driving/gin/middleware"
+	"github.com/llascola/web-backend/internal/adapters/driving/rest/handlers"
+	"github.com/llascola/web-backend/internal/adapters/driving/rest/middleware"
+	"github.com/llascola/web-backend/internal/adapters/driving/rest/openapi"
 	"github.com/llascola/web-backend/internal/app"
 	"github.com/llascola/web-backend/internal/app/domain"
 	"github.com/llascola/web-backend/internal/config"
@@ -15,7 +16,7 @@ import (
 )
 
 // NewRouter initializes the Gin engine with middleware and routes
-func NewGinRouter(app *app.Application, cfg *config.Config) *gin.Engine {
+func NewRouter(app *app.Application, cfg *config.Config) *gin.Engine {
 	// Initialize Zap Logger
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
@@ -34,10 +35,11 @@ func NewGinRouter(app *app.Application, cfg *config.Config) *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// Controllers
-	imageController := controllers.NewImageController(app.Service.ImageService)
-	userController := controllers.NewUserController(app.Service.UserService)
-	authController := controllers.NewAuthController(app.Service.AuthService)
+	// Handler
+	handler := handlers.NewHandler(app)
+	wrapper := openapi.ServerInterfaceWrapper{
+		Handler: handler,
+	}
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "API Root - Go to /status"})
@@ -51,11 +53,17 @@ func NewGinRouter(app *app.Application, cfg *config.Config) *gin.Engine {
 		})
 	})
 
+	r.GET("/health", wrapper.HealthCheck)
+
+	// Swagger UI
+	r.StaticFile("/openapi.yml", "./openapi/openapi.yml")
+	r.Static("/docs", "./docs")
+
 	// Public Routes
 	authGroup := r.Group("/auth")
 	{
-		authGroup.POST("/login", authController.Login)
-		authGroup.POST("/register", authController.Register) // Anyone can register
+		authGroup.POST("/login", wrapper.Login)
+		authGroup.POST("/register", wrapper.Register) // Anyone can register
 	}
 
 	// Protected Routes (Must be logged in)
@@ -63,18 +71,18 @@ func NewGinRouter(app *app.Application, cfg *config.Config) *gin.Engine {
 	api.Use(middleware.AuthMiddleware(cfg.JWTKeys))
 
 	// 1. Member Routes (Any logged in user)
-	api.GET("/profile", userController.GetProfile)
+	api.GET("/profile", wrapper.GetProfile)
 
 	// 2. Admin Routes (Only Admins)
 	admin := api.Group("/admin")
 	admin.Use(middleware.RequireRole(domain.RoleAdmin)) // <--- Blocks non-admins
 	{
-		admin.DELETE("/users/:id", userController.DeleteUser)
+		admin.DELETE("/users/:id", wrapper.DeleteUser)
 		admin.GET("/hola-mundo", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "Hola Mundo"})
 		})
-		admin.POST("/upload-system-config", imageController.UploadConfig)
-		admin.POST("/upload-image", imageController.UploadImage)
+		// admin.POST("/upload-system-config", imageController.UploadConfig) // Removed
+		admin.POST("/upload-image", wrapper.UploadImage)
 	}
 
 	return r

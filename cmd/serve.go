@@ -5,8 +5,7 @@ import (
 	"log"
 
 	"github.com/joho/godotenv"
-	ginadapter "github.com/llascola/web-backend/internal/adapters/driving/gin"
-	"github.com/llascola/web-backend/internal/adapters/driving/http"
+	"github.com/llascola/web-backend/internal/adapters/driving/rest"
 	"github.com/llascola/web-backend/internal/app"
 	"github.com/llascola/web-backend/internal/config"
 	"github.com/spf13/cobra"
@@ -27,11 +26,11 @@ var serveCmd = &cobra.Command{
 		// Initialize Application
 		application := app.NewApplication(cfg)
 
-		// Initialize Router from ginadapter package
-		r := ginadapter.NewGinRouter(application, cfg)
+		// Initialize Router from rest package
+		r := rest.NewRouter(application, cfg)
 
 		// Run Server
-		server := http.NewServer(r)
+		server := rest.NewServer(r)
 		server.Run(context.Background())
 	},
 }
