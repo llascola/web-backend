@@ -27,9 +27,14 @@ func (r *PostgresUserRepository) Save(ctx context.Context, u *domain.User) error
 		SetPasswordHash(u.PasswordHash).
 		SetRole(string(u.Role)).
 		SetCreatedAt(u.CreatedAt).
-		SetCreatedAt(u.CreatedAt).
 		Save(ctx)
-	return err
+	if err != nil {
+		if ent.IsConstraintError(err) {
+			return &domain.ErrConflict{Message: "user with this email already exists"}
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *PostgresUserRepository) Update(ctx context.Context, u *domain.User) error {
@@ -46,7 +51,14 @@ func (r *PostgresUserRepository) Update(ctx context.Context, u *domain.User) err
 		q.ClearRefreshTokenExpiresAt()
 	}
 
-	return q.Exec(ctx)
+	err := q.Exec(ctx)
+	if err != nil {
+		if ent.IsConstraintError(err) {
+			return &domain.ErrConflict{Message: "user with this email already exists"}
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
