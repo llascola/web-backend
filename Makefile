@@ -6,7 +6,7 @@ bootstrap:
 	hack/make-rules/tools.sh install
 
 $(APPS):
-	go build -o bin/pushup main.go
+	go build -o bin/server main.go
 
 ent:
 	go generate ./internal/adapters/driven/repository/ent/

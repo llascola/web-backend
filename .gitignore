@@ -1,1 +1,27 @@
+# Environment files
 .env
+.env.*
+!.env.example
+
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test artifacts
+*.test
+*.out
+coverage.txt
+
+# Dependency directories
+vendor/
+
+# IDE files
+.idea/
+.vscode/
+
+# Build cache
+.cache/
