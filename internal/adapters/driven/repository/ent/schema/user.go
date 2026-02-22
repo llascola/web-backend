@@ -25,6 +25,10 @@ func (User) Fields() []ent.Field {
 			NotEmpty(),
 		field.String("role").
 			NotEmpty(),
+		field.String("refresh_token_hash").
+			Optional(),
+		field.Time("refresh_token_expires_at").
+			Optional(),
 		field.Time("created_at").
 			Default(time.Now),
 	}

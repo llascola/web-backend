@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/llascola/web-backend/internal/adapters/driving/rest/openapi"
 	"github.com/llascola/web-backend/internal/app/outports"
 )
 
@@ -27,9 +28,9 @@ func (h *Handler) UploadImage(ctx *gin.Context) {
 		ContentType: fileHeader.Header.Get("Content-Type"),
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"url": url})
+	ctx.JSON(http.StatusOK, openapi.UploadImageResponse{Url: url})
 }

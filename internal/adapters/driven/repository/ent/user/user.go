@@ -20,6 +20,10 @@ const (
 	FieldPasswordHash = "password_hash"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
+	// FieldRefreshTokenHash holds the string denoting the refresh_token_hash field in the database.
+	FieldRefreshTokenHash = "refresh_token_hash"
+	// FieldRefreshTokenExpiresAt holds the string denoting the refresh_token_expires_at field in the database.
+	FieldRefreshTokenExpiresAt = "refresh_token_expires_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// Table holds the table name of the user in the database.
@@ -32,6 +36,8 @@ var Columns = []string{
 	FieldEmail,
 	FieldPasswordHash,
 	FieldRole,
+	FieldRefreshTokenHash,
+	FieldRefreshTokenExpiresAt,
 	FieldCreatedAt,
 }
 
@@ -79,6 +85,16 @@ func ByPasswordHash(opts ...sql.OrderTermOption) OrderOption {
 // ByRole orders the results by the role field.
 func ByRole(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRole, opts...).ToFunc()
+}
+
+// ByRefreshTokenHash orders the results by the refresh_token_hash field.
+func ByRefreshTokenHash(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRefreshTokenHash, opts...).ToFunc()
+}
+
+// ByRefreshTokenExpiresAt orders the results by the refresh_token_expires_at field.
+func ByRefreshTokenExpiresAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRefreshTokenExpiresAt, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

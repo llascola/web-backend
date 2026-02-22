@@ -70,6 +70,46 @@ func (_u *UserUpdate) SetNillableRole(v *string) *UserUpdate {
 	return _u
 }
 
+// SetRefreshTokenHash sets the "refresh_token_hash" field.
+func (_u *UserUpdate) SetRefreshTokenHash(v string) *UserUpdate {
+	_u.mutation.SetRefreshTokenHash(v)
+	return _u
+}
+
+// SetNillableRefreshTokenHash sets the "refresh_token_hash" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableRefreshTokenHash(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetRefreshTokenHash(*v)
+	}
+	return _u
+}
+
+// ClearRefreshTokenHash clears the value of the "refresh_token_hash" field.
+func (_u *UserUpdate) ClearRefreshTokenHash() *UserUpdate {
+	_u.mutation.ClearRefreshTokenHash()
+	return _u
+}
+
+// SetRefreshTokenExpiresAt sets the "refresh_token_expires_at" field.
+func (_u *UserUpdate) SetRefreshTokenExpiresAt(v time.Time) *UserUpdate {
+	_u.mutation.SetRefreshTokenExpiresAt(v)
+	return _u
+}
+
+// SetNillableRefreshTokenExpiresAt sets the "refresh_token_expires_at" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableRefreshTokenExpiresAt(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetRefreshTokenExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearRefreshTokenExpiresAt clears the value of the "refresh_token_expires_at" field.
+func (_u *UserUpdate) ClearRefreshTokenExpiresAt() *UserUpdate {
+	_u.mutation.ClearRefreshTokenExpiresAt()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *UserUpdate) SetCreatedAt(v time.Time) *UserUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -157,6 +197,18 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(user.FieldRole, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.RefreshTokenHash(); ok {
+		_spec.SetField(user.FieldRefreshTokenHash, field.TypeString, value)
+	}
+	if _u.mutation.RefreshTokenHashCleared() {
+		_spec.ClearField(user.FieldRefreshTokenHash, field.TypeString)
+	}
+	if value, ok := _u.mutation.RefreshTokenExpiresAt(); ok {
+		_spec.SetField(user.FieldRefreshTokenExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.RefreshTokenExpiresAtCleared() {
+		_spec.ClearField(user.FieldRefreshTokenExpiresAt, field.TypeTime)
+	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)
 	}
@@ -219,6 +271,46 @@ func (_u *UserUpdateOne) SetNillableRole(v *string) *UserUpdateOne {
 	if v != nil {
 		_u.SetRole(*v)
 	}
+	return _u
+}
+
+// SetRefreshTokenHash sets the "refresh_token_hash" field.
+func (_u *UserUpdateOne) SetRefreshTokenHash(v string) *UserUpdateOne {
+	_u.mutation.SetRefreshTokenHash(v)
+	return _u
+}
+
+// SetNillableRefreshTokenHash sets the "refresh_token_hash" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableRefreshTokenHash(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetRefreshTokenHash(*v)
+	}
+	return _u
+}
+
+// ClearRefreshTokenHash clears the value of the "refresh_token_hash" field.
+func (_u *UserUpdateOne) ClearRefreshTokenHash() *UserUpdateOne {
+	_u.mutation.ClearRefreshTokenHash()
+	return _u
+}
+
+// SetRefreshTokenExpiresAt sets the "refresh_token_expires_at" field.
+func (_u *UserUpdateOne) SetRefreshTokenExpiresAt(v time.Time) *UserUpdateOne {
+	_u.mutation.SetRefreshTokenExpiresAt(v)
+	return _u
+}
+
+// SetNillableRefreshTokenExpiresAt sets the "refresh_token_expires_at" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableRefreshTokenExpiresAt(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetRefreshTokenExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearRefreshTokenExpiresAt clears the value of the "refresh_token_expires_at" field.
+func (_u *UserUpdateOne) ClearRefreshTokenExpiresAt() *UserUpdateOne {
+	_u.mutation.ClearRefreshTokenExpiresAt()
 	return _u
 }
 
@@ -338,6 +430,18 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(user.FieldRole, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RefreshTokenHash(); ok {
+		_spec.SetField(user.FieldRefreshTokenHash, field.TypeString, value)
+	}
+	if _u.mutation.RefreshTokenHashCleared() {
+		_spec.ClearField(user.FieldRefreshTokenHash, field.TypeString)
+	}
+	if value, ok := _u.mutation.RefreshTokenExpiresAt(); ok {
+		_spec.SetField(user.FieldRefreshTokenExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.RefreshTokenExpiresAtCleared() {
+		_spec.ClearField(user.FieldRefreshTokenExpiresAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)

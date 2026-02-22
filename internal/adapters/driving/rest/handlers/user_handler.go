@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
+
+	"github.com/llascola/web-backend/internal/adapters/driving/rest/openapi"
 )
 
 func (h *Handler) GetProfile(ctx *gin.Context) {
@@ -15,9 +17,6 @@ func (h *Handler) GetProfile(ctx *gin.Context) {
 		return
 	}
 
-	// userIDStr is interface{}, need to cast to string then parse UUID
-	// Wait, in auth middleware: c.Set("userID", claims["sub"])
-	// claims["sub"] is string.
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
@@ -26,23 +25,23 @@ func (h *Handler) GetProfile(ctx *gin.Context) {
 
 	user, err := h.userService.GetProfile(ctx, userID)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		HandleError(ctx, err)
 		return
 	}
 
-	// Don't return password hash
-	ctx.JSON(http.StatusOK, gin.H{
-		"id":    user.ID,
-		"email": user.Email,
-		"role":  user.Role,
+	ctx.JSON(http.StatusOK, openapi.UserProfile{
+		Id:    user.ID,
+		Email: openapi_types.Email(user.Email),
+		Role:  string(user.Role),
 	})
 }
 
 func (h *Handler) DeleteUser(ctx *gin.Context, id openapi_types.UUID) {
 	if err := h.userService.DeleteUser(ctx, id); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "User deleted"})
+	msg := "User deleted"
+	ctx.JSON(http.StatusOK, openapi.MessageResponse{Message: &msg})
 }

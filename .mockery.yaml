@@ -1,0 +1,12 @@
+with-expecter: true
+packages:
+  github.com/llascola/web-backend/internal/app/outports:
+    interfaces:
+      TokenBlocklist:
+      TokenGenerator:
+      UserRepository:
+      FileStorageRepository:
+    config:
+      outpkg: mocks
+      dir: "internal/app/outports/mocks"
+      filename: "mock_{{.InterfaceName}}.go"

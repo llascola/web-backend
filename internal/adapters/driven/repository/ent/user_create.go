@@ -39,6 +39,34 @@ func (_c *UserCreate) SetRole(v string) *UserCreate {
 	return _c
 }
 
+// SetRefreshTokenHash sets the "refresh_token_hash" field.
+func (_c *UserCreate) SetRefreshTokenHash(v string) *UserCreate {
+	_c.mutation.SetRefreshTokenHash(v)
+	return _c
+}
+
+// SetNillableRefreshTokenHash sets the "refresh_token_hash" field if the given value is not nil.
+func (_c *UserCreate) SetNillableRefreshTokenHash(v *string) *UserCreate {
+	if v != nil {
+		_c.SetRefreshTokenHash(*v)
+	}
+	return _c
+}
+
+// SetRefreshTokenExpiresAt sets the "refresh_token_expires_at" field.
+func (_c *UserCreate) SetRefreshTokenExpiresAt(v time.Time) *UserCreate {
+	_c.mutation.SetRefreshTokenExpiresAt(v)
+	return _c
+}
+
+// SetNillableRefreshTokenExpiresAt sets the "refresh_token_expires_at" field if the given value is not nil.
+func (_c *UserCreate) SetNillableRefreshTokenExpiresAt(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetRefreshTokenExpiresAt(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *UserCreate) SetCreatedAt(v time.Time) *UserCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -187,6 +215,14 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Role(); ok {
 		_spec.SetField(user.FieldRole, field.TypeString, value)
 		_node.Role = value
+	}
+	if value, ok := _c.mutation.RefreshTokenHash(); ok {
+		_spec.SetField(user.FieldRefreshTokenHash, field.TypeString, value)
+		_node.RefreshTokenHash = value
+	}
+	if value, ok := _c.mutation.RefreshTokenExpiresAt(); ok {
+		_spec.SetField(user.FieldRefreshTokenExpiresAt, field.TypeTime, value)
+		_node.RefreshTokenExpiresAt = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)

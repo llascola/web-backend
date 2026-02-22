@@ -2,7 +2,6 @@ package memory
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	"github.com/google/uuid"
@@ -30,6 +29,16 @@ func (r *InMemoryUserRepository) Save(ctx context.Context, user *domain.User) er
 	return nil
 }
 
+func (r *InMemoryUserRepository) Update(ctx context.Context, user *domain.User) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, exists := r.users[user.ID]; !exists {
+		return &domain.ErrNotFound{Message: "user not found for update"}
+	}
+	r.users[user.ID] = user
+	return nil
+}
+
 func (r *InMemoryUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -38,7 +47,7 @@ func (r *InMemoryUserRepository) FindByEmail(ctx context.Context, email string) 
 			return u, nil
 		}
 	}
-	return nil, errors.New("user not found")
+	return nil, &domain.ErrNotFound{Message: "user not found"}
 }
 
 func (r *InMemoryUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
@@ -46,7 +55,7 @@ func (r *InMemoryUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*d
 	defer r.mu.RUnlock()
 	user, exists := r.users[id]
 	if !exists {
-		return nil, errors.New("user not found")
+		return nil, &domain.ErrNotFound{Message: "user not found"}
 	}
 	return user, nil
 }

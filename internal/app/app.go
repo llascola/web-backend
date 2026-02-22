@@ -6,18 +6,23 @@ import (
 	"log"
 
 	_ "github.com/lib/pq"
+	"github.com/llascola/web-backend/internal/adapters/driven/cache"
 	"github.com/llascola/web-backend/internal/adapters/driven/repository/ent"
 	"github.com/llascola/web-backend/internal/adapters/driven/repository/postgres"
+	"github.com/llascola/web-backend/internal/adapters/driven/security"
 	"github.com/llascola/web-backend/internal/adapters/driven/storage"
 	"github.com/llascola/web-backend/internal/app/inports"
+	"github.com/llascola/web-backend/internal/app/outports"
 	"github.com/llascola/web-backend/internal/app/services"
 	"github.com/llascola/web-backend/internal/config"
+	"github.com/redis/go-redis/v9"
 )
 
 type Service struct {
-	ImageService inports.ImageService
-	UserService  inports.UserService
-	AuthService  inports.AuthService
+	ImageService   inports.ImageService
+	UserService    inports.UserService
+	AuthService    inports.AuthService
+	TokenBlocklist outports.TokenBlocklist
 }
 
 type Application struct {
@@ -52,16 +57,30 @@ func NewApplication(cfg *config.Config) *Application {
 	}
 
 	userRepo := postgres.NewUserRepository(client)
+	tokenGen := security.NewJWTGenerator(cfg.JWTKeys, cfg.ActiveKeyID)
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Addr,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+
+	if err := redisClient.Ping(context.Background()).Err(); err != nil {
+		log.Fatalf("failed connecting to redis: %v", err)
+	}
+
+	blocklist := cache.NewRedisTokenBlocklist(redisClient)
 
 	imageService := services.NewImageService(fileStorage)
 	userService := services.NewUserService(userRepo)
-	authService := services.NewAuthService(userRepo, cfg.JWTKeys, cfg.ActiveKeyID)
+	authService := services.NewAuthService(userRepo, tokenGen, blocklist)
 
 	return &Application{
 		Service: &Service{
-			ImageService: imageService,
-			UserService:  userService,
-			AuthService:  authService,
+			ImageService:   imageService,
+			UserService:    userService,
+			AuthService:    authService,
+			TokenBlocklist: blocklist,
 		},
 	}
 }

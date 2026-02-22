@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"errors"
 	"path/filepath"
 	"strings"
 	"time"
@@ -10,8 +9,8 @@ import (
 )
 
 var (
-	ErrImageTooLarge = errors.New("image size exceeds maximum limit")
-	ErrInvalidFormat = errors.New("only jpeg and png formats are allowed")
+	ErrImageTooLarge = &ErrValidation{Message: "image size exceeds maximum limit"}
+	ErrInvalidFormat = &ErrValidation{Message: "only jpeg and png formats are allowed"}
 )
 
 type Image struct {

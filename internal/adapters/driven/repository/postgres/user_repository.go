@@ -27,8 +27,26 @@ func (r *PostgresUserRepository) Save(ctx context.Context, u *domain.User) error
 		SetPasswordHash(u.PasswordHash).
 		SetRole(string(u.Role)).
 		SetCreatedAt(u.CreatedAt).
+		SetCreatedAt(u.CreatedAt).
 		Save(ctx)
 	return err
+}
+
+func (r *PostgresUserRepository) Update(ctx context.Context, u *domain.User) error {
+	q := r.client.User.UpdateOneID(u.ID).
+		SetEmail(u.Email).
+		SetPasswordHash(u.PasswordHash).
+		SetRole(string(u.Role))
+
+	if u.RefreshTokenHash != "" {
+		q.SetRefreshTokenHash(u.RefreshTokenHash)
+		q.SetRefreshTokenExpiresAt(u.RefreshTokenExpiresAt)
+	} else {
+		q.ClearRefreshTokenHash()
+		q.ClearRefreshTokenExpiresAt()
+	}
+
+	return q.Exec(ctx)
 }
 
 func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
@@ -36,6 +54,9 @@ func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) 
 		Where(user.Email(email)).
 		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, &domain.ErrNotFound{Message: "user not found"}
+		}
 		return nil, err
 	}
 	return toDomainUser(u), nil
@@ -46,21 +67,30 @@ func (r *PostgresUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*d
 		Where(user.ID(id)).
 		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, &domain.ErrNotFound{Message: "user not found"}
+		}
 		return nil, err
 	}
 	return toDomainUser(u), nil
 }
 
 func (r *PostgresUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.client.User.DeleteOneID(id).Exec(ctx)
+	err := r.client.User.DeleteOneID(id).Exec(ctx)
+	if ent.IsNotFound(err) {
+		return &domain.ErrNotFound{Message: "user not found"}
+	}
+	return err
 }
 
 func toDomainUser(u *ent.User) *domain.User {
 	return &domain.User{
-		ID:           u.ID,
-		Email:        u.Email,
-		PasswordHash: u.PasswordHash,
-		Role:         domain.UserRole(u.Role),
-		CreatedAt:    u.CreatedAt,
+		ID:                    u.ID,
+		Email:                 u.Email,
+		PasswordHash:          u.PasswordHash,
+		Role:                  domain.UserRole(u.Role),
+		CreatedAt:             u.CreatedAt,
+		RefreshTokenHash:      u.RefreshTokenHash,
+		RefreshTokenExpiresAt: u.RefreshTokenExpiresAt,
 	}
 }

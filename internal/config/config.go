@@ -35,9 +35,16 @@ type PostgresConfig struct {
 	SSLMode  string
 }
 
+type RedisConfig struct {
+	Addr     string
+	Password string
+	DB       int
+}
+
 type Config struct {
 	MinIO       MinIOConfig
 	Postgres    PostgresConfig
+	Redis       RedisConfig
 	JWTKeys     map[string]JWTKey
 	ActiveKeyID string
 }
@@ -45,6 +52,13 @@ type Config struct {
 type JWTKey struct {
 	Secret    []byte
 	Algorithm string
+}
+
+func getEnvOrDefault(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
 
 func Load() *Config {
@@ -70,6 +84,11 @@ func Load() *Config {
 			Password: os.Getenv("POSTGRES_PASSWORD"),
 			DBName:   os.Getenv("POSTGRES_DB"),
 			SSLMode:  os.Getenv("POSTGRES_SSLMODE"),
+		},
+		Redis: RedisConfig{
+			Addr:     getEnvOrDefault("REDIS_ADDR", "localhost:6379"),
+			Password: os.Getenv("REDIS_PASSWORD"),
+			DB:       0, // Use default DB
 		},
 
 		JWTKeys: map[string]JWTKey{

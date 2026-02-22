@@ -10,7 +10,6 @@ import (
 	"github.com/llascola/web-backend/internal/adapters/driving/rest/middleware"
 	"github.com/llascola/web-backend/internal/adapters/driving/rest/openapi"
 	"github.com/llascola/web-backend/internal/app"
-	"github.com/llascola/web-backend/internal/app/domain"
 	"github.com/llascola/web-backend/internal/config"
 	"go.uber.org/zap"
 )
@@ -35,12 +34,7 @@ func NewRouter(app *app.Application, cfg *config.Config) *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// Handler
-	handler := handlers.NewHandler(app)
-	wrapper := openapi.ServerInterfaceWrapper{
-		Handler: handler,
-	}
-
+	// Static routes (not part of OpenAPI)
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "API Root - Go to /status"})
 	})
@@ -53,37 +47,23 @@ func NewRouter(app *app.Application, cfg *config.Config) *gin.Engine {
 		})
 	})
 
-	r.GET("/health", wrapper.HealthCheck)
-
 	// Swagger UI
 	r.StaticFile("/openapi.yml", "./openapi/openapi.yml")
 	r.Static("/docs", "./docs")
 
-	// Public Routes
-	authGroup := r.Group("/auth")
-	{
-		authGroup.POST("/login", wrapper.Login)
-		authGroup.POST("/register", wrapper.Register) // Anyone can register
-	}
-
-	// Protected Routes (Must be logged in)
-	api := r.Group("/api")
-	api.Use(middleware.AuthMiddleware(cfg.JWTKeys))
-
-	// 1. Member Routes (Any logged in user)
-	api.GET("/profile", wrapper.GetProfile)
-
-	// 2. Admin Routes (Only Admins)
-	admin := api.Group("/admin")
-	admin.Use(middleware.RequireRole(domain.RoleAdmin)) // <--- Blocks non-admins
-	{
-		admin.DELETE("/users/:id", wrapper.DeleteUser)
-		admin.GET("/hola-mundo", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"message": "Hola Mundo"})
-		})
-		// admin.POST("/upload-system-config", imageController.UploadConfig) // Removed
-		admin.POST("/upload-image", wrapper.UploadImage)
-	}
+	// Register all OpenAPI routes via generated RegisterHandlers.
+	// Security is handled per-endpoint via BearerAuthScopes set by the
+	// generated wrapper — the SecurityMiddleware reads those scopes and
+	// enforces JWT auth + RBAC automatically.
+	handler := handlers.NewHandler(app)
+	openapi.RegisterHandlersWithOptions(r, handler, openapi.GinServerOptions{
+		Middlewares: []openapi.MiddlewareFunc{
+			middleware.SecurityMiddleware(cfg.JWTKeys, app.Service.TokenBlocklist),
+		},
+		ErrorHandler: func(c *gin.Context, err error, statusCode int) {
+			c.JSON(statusCode, gin.H{"error": err.Error()})
+		},
+	})
 
 	return r
 }

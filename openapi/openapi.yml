@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Backend API
-  description: API for the Backend service
+  description: API for the portfolio Backend service
   version: 1.0.0
   contact:
     name: API Support
@@ -11,93 +11,73 @@ servers:
     description: Development server
   - url: https://api.example.com
     description: Production server
+tags:
+  - name: health
+    description: Service health and status
+  - name: auth
+    description: Authentication (register, login)
+  - name: users
+    description: User profile and management
+  - name: images
+    description: Image upload and management
 paths:
   /health:
     get:
-      summary: Health check
-      description: Check if the service is healthy
+      summary: Health check endpoint
       operationId: HealthCheck
+      tags:
+        - health
       responses:
         '200':
-          description: Service is healthy
+          description: API is healthy
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "ok"
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2023-01-01T00:00:00Z"
+                $ref: '#/components/schemas/HealthResponse'
   /auth/register:
     post:
       summary: Register a new user
       operationId: Register
+      tags:
+        - auth
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-                  minLength: 8
+              $ref: '#/components/schemas/AuthRequest'
       responses:
         '201':
           description: User registered successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+                $ref: '#/components/schemas/MessageResponse'
         '400':
           description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /auth/login:
     post:
       summary: Login user
       operationId: Login
+      tags:
+        - auth
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
+              $ref: '#/components/schemas/AuthRequest'
       responses:
         '200':
           description: Login successful
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  token:
-                    type: string
+                $ref: '#/components/schemas/LoginResponse'
         '400':
           description: Bad request
           content:
@@ -110,11 +90,123 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-  /images/upload:
+  /auth/logout:
+    post:
+      summary: Logout user (revoke token)
+      operationId: Logout
+      tags:
+        - auth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/refresh:
+    post:
+      summary: Refresh authentication tokens
+      operationId: Refresh
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Tokens refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/profile:
+    get:
+      summary: Get user profile
+      operationId: GetProfile
+      tags:
+        - users
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/admin/users/{id}:
+    delete:
+      summary: Delete a user
+      operationId: DeleteUser
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth:
+            - admin
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/admin/upload-image:
     post:
       summary: Upload an image
       operationId: UploadImage
+      tags:
+        - images
+      security:
+        - BearerAuth:
+            - admin
       requestBody:
         required: true
         content:
@@ -131,10 +223,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  url:
-                    type: string
+                $ref: '#/components/schemas/UploadImageResponse'
         '400':
           description: Bad request
           content:
@@ -147,77 +236,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-  /users/me:
-    get:
-      summary: Get current user profile
-      operationId: GetProfile
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: User profile
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    format: uuid
-                  email:
-                    type: string
-                    format: email
-                  role:
-                    type: string
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /users/{id}:
-    delete:
-      summary: Delete a user
-      operationId: DeleteUser
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-            format: uuid
-          required: true
-          description: User ID
-      responses:
-        '200':
-          description: User deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '400':
-          description: Invalid ID
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
 components:
   securitySchemes:
     BearerAuth:
@@ -225,8 +243,74 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    AuthRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+    UserProfile:
+      type: object
+      required:
+        - id
+        - email
+        - role
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+    UploadImageResponse:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
     Error:
       type: object
       properties:
         error:
           type: string
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        timestamp:
+          type: string
+          format: date-time
+          example: '2023-01-01T00:00:00Z'

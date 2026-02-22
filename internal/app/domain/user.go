@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,8 +8,8 @@ import (
 )
 
 var (
-	ErrInvalidEmail = errors.New("invalid email format")
-	ErrPasswordWeak = errors.New("password must be at least 8 characters")
+	ErrInvalidEmail = &ErrValidation{Message: "invalid email format"}
+	ErrPasswordWeak = &ErrValidation{Message: "password must be at least 8 characters"}
 )
 
 type UserRole string
@@ -21,11 +20,13 @@ const (
 )
 
 type User struct {
-	ID           uuid.UUID
-	Email        string
-	PasswordHash string
-	Role         UserRole
-	CreatedAt    time.Time
+	ID                    uuid.UUID
+	Email                 string
+	PasswordHash          string
+	Role                  UserRole
+	CreatedAt             time.Time
+	RefreshTokenHash      string
+	RefreshTokenExpiresAt time.Time
 }
 
 func NewUser(email, password string, role UserRole) (*User, error) {
@@ -33,7 +34,7 @@ func NewUser(email, password string, role UserRole) (*User, error) {
 		return nil, ErrPasswordWeak
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return nil, err
 	}
@@ -54,4 +55,29 @@ func NewUser(email, password string, role UserRole) (*User, error) {
 func (u *User) CheckPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
 	return err == nil
+}
+
+func (u *User) SetRefreshToken(token string, expiresAt time.Time) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(token), 10) // Lower cost fine for high entropy tokens
+	if err != nil {
+		return err
+	}
+	u.RefreshTokenHash = string(hash)
+	u.RefreshTokenExpiresAt = expiresAt
+	return nil
+}
+
+func (u *User) VerifyRefreshToken(token string) bool {
+	if u.RefreshTokenHash == "" || time.Now().After(u.RefreshTokenExpiresAt) {
+		return false
+	}
+	return bcrypt.CompareHashAndPassword([]byte(u.RefreshTokenHash), []byte(token)) == nil
+}
+
+// CompareDummyPassword runs a bcrypt comparison against a dummy hash to normalize response times
+// for login attempts with valid vs invalid emails.
+func CompareDummyPassword(password string) {
+	// A valid pre-computed bcrypt hash (cost 12) for an empty string or generic value
+	dummyHash := []byte("$2a$12$DUMMYDUMMYDUMMYDUMMYDUMMYDUMMYDUMMYDUMMYDUMMYDUMMYDUM")
+	_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(password))
 }

@@ -9,15 +9,17 @@ $(APPS):
 	go build -o bin/pushup main.go
 
 ent:
-	go generate ./internal/adapters/persistence/ent/
+	go generate ./internal/adapters/driven/repository/ent/
 
-openapi: openapi_http
+mocks:
+	mockery
 
-openapi_http:
-	@./scripts/openapi-http.sh openapi internal/adapters/driving/http server
-
-openapi_js:
-	@./scripts/openapi-js.sh openapi
+.PHONY: openapi
+openapi:
+	npx @redocly/cli bundle openapi/openapi.yml -o openapi/bundled.yml
+	oapi-codegen --config openapi/codegen_types.yml openapi/bundled.yml
+	oapi-codegen --config openapi/codegen_server.yml openapi/bundled.yml
+	rm openapi/bundled.yml
 
 clean:
 	rm -rf bin/*

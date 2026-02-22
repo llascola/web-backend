@@ -1,0 +1,4 @@
+package: openapi
+output: internal/adapters/driving/rest/openapi/types.gen.go
+generate:
+  models: true
