@@ -13,11 +13,65 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for BlogPostStatus.
+const (
+	BlogPostStatusDraft     BlogPostStatus = "draft"
+	BlogPostStatusPublished BlogPostStatus = "published"
+)
+
+// Defines values for CreateBlogPostRequestStatus.
+const (
+	CreateBlogPostRequestStatusDraft     CreateBlogPostRequestStatus = "draft"
+	CreateBlogPostRequestStatusPublished CreateBlogPostRequestStatus = "published"
+)
+
+// Defines values for UpdateBlogPostRequestStatus.
+const (
+	Draft     UpdateBlogPostRequestStatus = "draft"
+	Published UpdateBlogPostRequestStatus = "published"
+)
+
 // AuthRequest defines model for AuthRequest.
 type AuthRequest struct {
 	Email    openapi_types.Email `json:"email"`
 	Password string              `json:"password"`
 }
+
+// BlogPost defines model for BlogPost.
+type BlogPost struct {
+	AuthorId    *openapi_types.UUID `json:"author_id,omitempty"`
+	Content     string              `json:"content"`
+	CreatedAt   time.Time           `json:"created_at"`
+	Excerpt     *string             `json:"excerpt,omitempty"`
+	Id          openapi_types.UUID  `json:"id"`
+	PublishedAt *time.Time          `json:"published_at,omitempty"`
+	Slug        string              `json:"slug"`
+	Status      BlogPostStatus      `json:"status"`
+	Tags        []string            `json:"tags"`
+	Title       string              `json:"title"`
+	UpdatedAt   time.Time           `json:"updated_at"`
+}
+
+// BlogPostStatus defines model for BlogPost.Status.
+type BlogPostStatus string
+
+// BlogPostList defines model for BlogPostList.
+type BlogPostList struct {
+	Posts []BlogPost `json:"posts"`
+	Total int        `json:"total"`
+}
+
+// CreateBlogPostRequest defines model for CreateBlogPostRequest.
+type CreateBlogPostRequest struct {
+	Content string                      `json:"content"`
+	Excerpt *string                     `json:"excerpt,omitempty"`
+	Status  CreateBlogPostRequestStatus `json:"status"`
+	Tags    *[]string                   `json:"tags,omitempty"`
+	Title   string                      `json:"title"`
+}
+
+// CreateBlogPostRequestStatus defines model for CreateBlogPostRequest.Status.
+type CreateBlogPostRequestStatus string
 
 // Error defines model for Error.
 type Error struct {
@@ -46,6 +100,23 @@ type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+// TagList defines model for TagList.
+type TagList struct {
+	Tags []string `json:"tags"`
+}
+
+// UpdateBlogPostRequest defines model for UpdateBlogPostRequest.
+type UpdateBlogPostRequest struct {
+	Content *string                      `json:"content,omitempty"`
+	Excerpt *string                      `json:"excerpt,omitempty"`
+	Status  *UpdateBlogPostRequestStatus `json:"status,omitempty"`
+	Tags    *[]string                    `json:"tags,omitempty"`
+	Title   *string                      `json:"title,omitempty"`
+}
+
+// UpdateBlogPostRequestStatus defines model for UpdateBlogPostRequest.Status.
+type UpdateBlogPostRequestStatus string
+
 // UploadImageResponse defines model for UploadImageResponse.
 type UploadImageResponse struct {
 	Url string `json:"url"`
@@ -58,10 +129,29 @@ type UserProfile struct {
 	Role  string              `json:"role"`
 }
 
+// ListAllPostsParams defines parameters for ListAllPosts.
+type ListAllPostsParams struct {
+	Page     *int `form:"page,omitempty" json:"page,omitempty"`
+	PageSize *int `form:"page_size,omitempty" json:"page_size,omitempty"`
+}
+
 // UploadImageMultipartBody defines parameters for UploadImage.
 type UploadImageMultipartBody struct {
 	File *openapi_types.File `json:"file,omitempty"`
 }
+
+// ListPublishedPostsParams defines parameters for ListPublishedPosts.
+type ListPublishedPostsParams struct {
+	Tag      *string `form:"tag,omitempty" json:"tag,omitempty"`
+	Page     *int    `form:"page,omitempty" json:"page,omitempty"`
+	PageSize *int    `form:"page_size,omitempty" json:"page_size,omitempty"`
+}
+
+// CreateBlogPostJSONRequestBody defines body for CreateBlogPost for application/json ContentType.
+type CreateBlogPostJSONRequestBody = CreateBlogPostRequest
+
+// UpdateBlogPostJSONRequestBody defines body for UpdateBlogPost for application/json ContentType.
+type UpdateBlogPostJSONRequestBody = UpdateBlogPostRequest
 
 // UploadImageMultipartRequestBody defines body for UploadImage for multipart/form-data ContentType.
 type UploadImageMultipartRequestBody UploadImageMultipartBody

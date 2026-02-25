@@ -8,6 +8,36 @@ import (
 )
 
 var (
+	// BlogPostsColumns holds the columns for the "blog_posts" table.
+	BlogPostsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "title", Type: field.TypeString},
+		{Name: "slug", Type: field.TypeString, Unique: true},
+		{Name: "content", Type: field.TypeString, Size: 2147483647},
+		{Name: "excerpt", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "published"}},
+		{Name: "author_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+	}
+	// BlogPostsTable holds the schema information for the "blog_posts" table.
+	BlogPostsTable = &schema.Table{
+		Name:       "blog_posts",
+		Columns:    BlogPostsColumns,
+		PrimaryKey: []*schema.Column{BlogPostsColumns[0]},
+	}
+	// TagsColumns holds the columns for the "tags" table.
+	TagsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Unique: true},
+	}
+	// TagsTable holds the schema information for the "tags" table.
+	TagsTable = &schema.Table{
+		Name:       "tags",
+		Columns:    TagsColumns,
+		PrimaryKey: []*schema.Column{TagsColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -24,11 +54,41 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
+	// BlogPostTagsColumns holds the columns for the "blog_post_tags" table.
+	BlogPostTagsColumns = []*schema.Column{
+		{Name: "blog_post_id", Type: field.TypeUUID},
+		{Name: "tag_id", Type: field.TypeUUID},
+	}
+	// BlogPostTagsTable holds the schema information for the "blog_post_tags" table.
+	BlogPostTagsTable = &schema.Table{
+		Name:       "blog_post_tags",
+		Columns:    BlogPostTagsColumns,
+		PrimaryKey: []*schema.Column{BlogPostTagsColumns[0], BlogPostTagsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "blog_post_tags_blog_post_id",
+				Columns:    []*schema.Column{BlogPostTagsColumns[0]},
+				RefColumns: []*schema.Column{BlogPostsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "blog_post_tags_tag_id",
+				Columns:    []*schema.Column{BlogPostTagsColumns[1]},
+				RefColumns: []*schema.Column{TagsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		BlogPostsTable,
+		TagsTable,
 		UsersTable,
+		BlogPostTagsTable,
 	}
 )
 
 func init() {
+	BlogPostTagsTable.ForeignKeys[0].RefTable = BlogPostsTable
+	BlogPostTagsTable.ForeignKeys[1].RefTable = TagsTable
 }

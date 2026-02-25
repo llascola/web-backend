@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/llascola/web-backend/internal/adapters/driven/repository/ent/blogpost"
 	"github.com/llascola/web-backend/internal/adapters/driven/repository/ent/schema"
+	"github.com/llascola/web-backend/internal/adapters/driven/repository/ent/tag"
 	"github.com/llascola/web-backend/internal/adapters/driven/repository/ent/user"
 )
 
@@ -14,6 +16,48 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	blogpostFields := schema.BlogPost{}.Fields()
+	_ = blogpostFields
+	// blogpostDescTitle is the schema descriptor for title field.
+	blogpostDescTitle := blogpostFields[1].Descriptor()
+	// blogpost.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	blogpost.TitleValidator = blogpostDescTitle.Validators[0].(func(string) error)
+	// blogpostDescSlug is the schema descriptor for slug field.
+	blogpostDescSlug := blogpostFields[2].Descriptor()
+	// blogpost.SlugValidator is a validator for the "slug" field. It is called by the builders before save.
+	blogpost.SlugValidator = blogpostDescSlug.Validators[0].(func(string) error)
+	// blogpostDescContent is the schema descriptor for content field.
+	blogpostDescContent := blogpostFields[3].Descriptor()
+	// blogpost.ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	blogpost.ContentValidator = blogpostDescContent.Validators[0].(func(string) error)
+	// blogpostDescExcerpt is the schema descriptor for excerpt field.
+	blogpostDescExcerpt := blogpostFields[4].Descriptor()
+	// blogpost.DefaultExcerpt holds the default value on creation for the excerpt field.
+	blogpost.DefaultExcerpt = blogpostDescExcerpt.Default.(string)
+	// blogpostDescCreatedAt is the schema descriptor for created_at field.
+	blogpostDescCreatedAt := blogpostFields[7].Descriptor()
+	// blogpost.DefaultCreatedAt holds the default value on creation for the created_at field.
+	blogpost.DefaultCreatedAt = blogpostDescCreatedAt.Default.(func() time.Time)
+	// blogpostDescUpdatedAt is the schema descriptor for updated_at field.
+	blogpostDescUpdatedAt := blogpostFields[8].Descriptor()
+	// blogpost.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	blogpost.DefaultUpdatedAt = blogpostDescUpdatedAt.Default.(func() time.Time)
+	// blogpost.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	blogpost.UpdateDefaultUpdatedAt = blogpostDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// blogpostDescID is the schema descriptor for id field.
+	blogpostDescID := blogpostFields[0].Descriptor()
+	// blogpost.DefaultID holds the default value on creation for the id field.
+	blogpost.DefaultID = blogpostDescID.Default.(func() uuid.UUID)
+	tagFields := schema.Tag{}.Fields()
+	_ = tagFields
+	// tagDescName is the schema descriptor for name field.
+	tagDescName := tagFields[1].Descriptor()
+	// tag.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	tag.NameValidator = tagDescName.Validators[0].(func(string) error)
+	// tagDescID is the schema descriptor for id field.
+	tagDescID := tagFields[0].Descriptor()
+	// tag.DefaultID holds the default value on creation for the id field.
+	tag.DefaultID = tagDescID.Default.(func() uuid.UUID)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescEmail is the schema descriptor for email field.

@@ -9,6 +9,7 @@ type Handler struct {
 	authService  inports.AuthService
 	imageService inports.ImageService
 	userService  inports.UserService
+	blogService  inports.BlogService
 }
 
 func NewHandler(app *app.Application) *Handler {
@@ -16,5 +17,6 @@ func NewHandler(app *app.Application) *Handler {
 		authService:  app.Service.AuthService,
 		imageService: app.Service.ImageService,
 		userService:  app.Service.UserService,
+		blogService:  app.Service.BlogService,
 	}
 }

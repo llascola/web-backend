@@ -22,6 +22,7 @@ type Service struct {
 	ImageService   inports.ImageService
 	UserService    inports.UserService
 	AuthService    inports.AuthService
+	BlogService    inports.BlogService
 	TokenBlocklist outports.TokenBlocklist
 }
 
@@ -71,15 +72,19 @@ func NewApplication(cfg *config.Config) *Application {
 
 	blocklist := cache.NewRedisTokenBlocklist(redisClient)
 
+	blogPostRepo := postgres.NewBlogPostRepository(client)
+
 	imageService := services.NewImageService(fileStorage)
 	userService := services.NewUserService(userRepo)
 	authService := services.NewAuthService(userRepo, tokenGen, blocklist)
+	blogService := services.NewBlogService(blogPostRepo)
 
 	return &Application{
 		Service: &Service{
 			ImageService:   imageService,
 			UserService:    userService,
 			AuthService:    authService,
+			BlogService:    blogService,
 			TokenBlocklist: blocklist,
 		},
 	}

@@ -14,6 +14,18 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// List all blog posts (including drafts)
+	// (GET /api/admin/blog/posts)
+	ListAllPosts(c *gin.Context, params ListAllPostsParams)
+	// Create a new blog post
+	// (POST /api/admin/blog/posts)
+	CreateBlogPost(c *gin.Context)
+	// Delete a blog post
+	// (DELETE /api/admin/blog/posts/{id})
+	DeleteBlogPost(c *gin.Context, id openapi_types.UUID)
+	// Update a blog post
+	// (PUT /api/admin/blog/posts/{id})
+	UpdateBlogPost(c *gin.Context, id openapi_types.UUID)
 	// Upload an image
 	// (POST /api/admin/upload-image)
 	UploadImage(c *gin.Context)
@@ -35,6 +47,15 @@ type ServerInterface interface {
 	// Register a new user
 	// (POST /auth/register)
 	Register(c *gin.Context)
+	// List published blog posts
+	// (GET /blog/posts)
+	ListPublishedPosts(c *gin.Context, params ListPublishedPostsParams)
+	// Get a published blog post by slug
+	// (GET /blog/posts/{slug})
+	GetPublishedPost(c *gin.Context, slug string)
+	// List all blog tags
+	// (GET /blog/tags)
+	ListBlogTags(c *gin.Context)
 	// Health check endpoint
 	// (GET /health)
 	HealthCheck(c *gin.Context)
@@ -48,6 +69,109 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// ListAllPosts operation middleware
+func (siw *ServerInterfaceWrapper) ListAllPosts(c *gin.Context) {
+
+	var err error
+
+	c.Set(BearerAuthScopes, []string{"admin"})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAllPostsParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page_size" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page_size", c.Request.URL.Query(), &params.PageSize)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page_size: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAllPosts(c, params)
+}
+
+// CreateBlogPost operation middleware
+func (siw *ServerInterfaceWrapper) CreateBlogPost(c *gin.Context) {
+
+	c.Set(BearerAuthScopes, []string{"admin"})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateBlogPost(c)
+}
+
+// DeleteBlogPost operation middleware
+func (siw *ServerInterfaceWrapper) DeleteBlogPost(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(BearerAuthScopes, []string{"admin"})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteBlogPost(c, id)
+}
+
+// UpdateBlogPost operation middleware
+func (siw *ServerInterfaceWrapper) UpdateBlogPost(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(BearerAuthScopes, []string{"admin"})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateBlogPost(c, id)
+}
 
 // UploadImage operation middleware
 func (siw *ServerInterfaceWrapper) UploadImage(c *gin.Context) {
@@ -159,6 +283,85 @@ func (siw *ServerInterfaceWrapper) Register(c *gin.Context) {
 	siw.Handler.Register(c)
 }
 
+// ListPublishedPosts operation middleware
+func (siw *ServerInterfaceWrapper) ListPublishedPosts(c *gin.Context) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListPublishedPostsParams
+
+	// ------------- Optional query parameter "tag" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "tag", c.Request.URL.Query(), &params.Tag)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter tag: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page_size" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page_size", c.Request.URL.Query(), &params.PageSize)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page_size: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListPublishedPosts(c, params)
+}
+
+// GetPublishedPost operation middleware
+func (siw *ServerInterfaceWrapper) GetPublishedPost(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetPublishedPost(c, slug)
+}
+
+// ListBlogTags operation middleware
+func (siw *ServerInterfaceWrapper) ListBlogTags(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListBlogTags(c)
+}
+
 // HealthCheck operation middleware
 func (siw *ServerInterfaceWrapper) HealthCheck(c *gin.Context) {
 
@@ -199,6 +402,10 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
+	router.GET(options.BaseURL+"/api/admin/blog/posts", wrapper.ListAllPosts)
+	router.POST(options.BaseURL+"/api/admin/blog/posts", wrapper.CreateBlogPost)
+	router.DELETE(options.BaseURL+"/api/admin/blog/posts/:id", wrapper.DeleteBlogPost)
+	router.PUT(options.BaseURL+"/api/admin/blog/posts/:id", wrapper.UpdateBlogPost)
 	router.POST(options.BaseURL+"/api/admin/upload-image", wrapper.UploadImage)
 	router.DELETE(options.BaseURL+"/api/admin/users/:id", wrapper.DeleteUser)
 	router.GET(options.BaseURL+"/api/profile", wrapper.GetProfile)
@@ -206,5 +413,8 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/auth/logout", wrapper.Logout)
 	router.POST(options.BaseURL+"/auth/refresh", wrapper.Refresh)
 	router.POST(options.BaseURL+"/auth/register", wrapper.Register)
+	router.GET(options.BaseURL+"/blog/posts", wrapper.ListPublishedPosts)
+	router.GET(options.BaseURL+"/blog/posts/:slug", wrapper.GetPublishedPost)
+	router.GET(options.BaseURL+"/blog/tags", wrapper.ListBlogTags)
 	router.GET(options.BaseURL+"/health", wrapper.HealthCheck)
 }
