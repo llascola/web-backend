@@ -141,7 +141,7 @@ func TestE2EAuthFlow(t *testing.T) {
 	})
 
 	t.Run("3. Access Protected Profile Route", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodGet, "/api/profile", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/profile", nil)
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 
 		w := httptest.NewRecorder()
@@ -169,7 +169,7 @@ func TestE2EAuthFlow(t *testing.T) {
 	})
 
 	t.Run("5. Deny Access to Profile After Logout", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodGet, "/api/profile", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/profile", nil)
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 
 		w := httptest.NewRecorder()

@@ -15,26 +15,23 @@ import (
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List all blog posts (including drafts)
-	// (GET /api/admin/blog/posts)
+	// (GET /admin/blog/posts)
 	ListAllPosts(c *gin.Context, params ListAllPostsParams)
 	// Create a new blog post
-	// (POST /api/admin/blog/posts)
+	// (POST /admin/blog/posts)
 	CreateBlogPost(c *gin.Context)
 	// Delete a blog post
-	// (DELETE /api/admin/blog/posts/{id})
+	// (DELETE /admin/blog/posts/{id})
 	DeleteBlogPost(c *gin.Context, id openapi_types.UUID)
 	// Update a blog post
-	// (PUT /api/admin/blog/posts/{id})
+	// (PUT /admin/blog/posts/{id})
 	UpdateBlogPost(c *gin.Context, id openapi_types.UUID)
 	// Upload an image
-	// (POST /api/admin/upload-image)
+	// (POST /admin/upload-image)
 	UploadImage(c *gin.Context)
 	// Delete a user
-	// (DELETE /api/admin/users/{id})
+	// (DELETE /admin/users/{id})
 	DeleteUser(c *gin.Context, id openapi_types.UUID)
-	// Get user profile
-	// (GET /api/profile)
-	GetProfile(c *gin.Context)
 	// Login user
 	// (POST /auth/login)
 	Login(c *gin.Context)
@@ -59,6 +56,9 @@ type ServerInterface interface {
 	// Health check endpoint
 	// (GET /health)
 	HealthCheck(c *gin.Context)
+	// Get user profile
+	// (GET /profile)
+	GetProfile(c *gin.Context)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -214,21 +214,6 @@ func (siw *ServerInterfaceWrapper) DeleteUser(c *gin.Context) {
 	siw.Handler.DeleteUser(c, id)
 }
 
-// GetProfile operation middleware
-func (siw *ServerInterfaceWrapper) GetProfile(c *gin.Context) {
-
-	c.Set(BearerAuthScopes, []string{})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.GetProfile(c)
-}
-
 // Login operation middleware
 func (siw *ServerInterfaceWrapper) Login(c *gin.Context) {
 
@@ -375,6 +360,21 @@ func (siw *ServerInterfaceWrapper) HealthCheck(c *gin.Context) {
 	siw.Handler.HealthCheck(c)
 }
 
+// GetProfile operation middleware
+func (siw *ServerInterfaceWrapper) GetProfile(c *gin.Context) {
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetProfile(c)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -402,13 +402,12 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
-	router.GET(options.BaseURL+"/api/admin/blog/posts", wrapper.ListAllPosts)
-	router.POST(options.BaseURL+"/api/admin/blog/posts", wrapper.CreateBlogPost)
-	router.DELETE(options.BaseURL+"/api/admin/blog/posts/:id", wrapper.DeleteBlogPost)
-	router.PUT(options.BaseURL+"/api/admin/blog/posts/:id", wrapper.UpdateBlogPost)
-	router.POST(options.BaseURL+"/api/admin/upload-image", wrapper.UploadImage)
-	router.DELETE(options.BaseURL+"/api/admin/users/:id", wrapper.DeleteUser)
-	router.GET(options.BaseURL+"/api/profile", wrapper.GetProfile)
+	router.GET(options.BaseURL+"/admin/blog/posts", wrapper.ListAllPosts)
+	router.POST(options.BaseURL+"/admin/blog/posts", wrapper.CreateBlogPost)
+	router.DELETE(options.BaseURL+"/admin/blog/posts/:id", wrapper.DeleteBlogPost)
+	router.PUT(options.BaseURL+"/admin/blog/posts/:id", wrapper.UpdateBlogPost)
+	router.POST(options.BaseURL+"/admin/upload-image", wrapper.UploadImage)
+	router.DELETE(options.BaseURL+"/admin/users/:id", wrapper.DeleteUser)
 	router.POST(options.BaseURL+"/auth/login", wrapper.Login)
 	router.POST(options.BaseURL+"/auth/logout", wrapper.Logout)
 	router.POST(options.BaseURL+"/auth/refresh", wrapper.Refresh)
@@ -417,4 +416,5 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/blog/posts/:slug", wrapper.GetPublishedPost)
 	router.GET(options.BaseURL+"/blog/tags", wrapper.ListBlogTags)
 	router.GET(options.BaseURL+"/health", wrapper.HealthCheck)
+	router.GET(options.BaseURL+"/profile", wrapper.GetProfile)
 }

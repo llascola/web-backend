@@ -144,7 +144,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /api/profile:
+  /profile:
     get:
       summary: Get user profile
       operationId: GetProfile
@@ -171,7 +171,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /api/admin/users/{id}:
+  /admin/users/{id}:
     delete:
       summary: Delete a user
       operationId: DeleteUser
@@ -206,7 +206,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /api/admin/upload-image:
+  /admin/upload-image:
     post:
       summary: Upload an image
       operationId: UploadImage
@@ -313,7 +313,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TagList'
-  /api/admin/blog/posts:
+  /admin/blog/posts:
     get:
       summary: List all blog posts (including drafts)
       operationId: ListAllPosts
@@ -387,7 +387,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /api/admin/blog/posts/{id}:
+  /admin/blog/posts/{id}:
     put:
       summary: Update a blog post
       operationId: UpdateBlogPost
