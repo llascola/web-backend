@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -27,15 +28,27 @@ func SecurityMiddleware(keys map[string]config.JWTKey, blocklist outports.TokenB
 
 		requiredScopes, _ := scopesRaw.([]string)
 
-		// ── JWT Validation ──────────────────────────────────
+		// ── JWT Extraction ──────────────────────────────────
+
+		var tokenString string
+		var ok bool
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
+
+		tokenString, ok = strings.CutPrefix(authHeader, "Bearer ")
+
+		if !ok {
+			cookieToke, err := c.Cookie("token")
+			if err == nil && cookieToke != "" {
+				tokenString = cookieToke
+			}
+		}
+
+		if tokenString == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 			return
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-
+		// ── JWT Validation ──────────────────────────────────
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 			kid, ok := token.Header["kid"].(string)
 			if !ok {
@@ -94,13 +107,7 @@ func SecurityMiddleware(keys map[string]config.JWTKey, blocklist outports.TokenB
 		// verify the user's role matches.
 		if len(requiredScopes) > 0 {
 			userRole, _ := claims["role"].(string)
-			authorized := false
-			for _, scope := range requiredScopes {
-				if userRole == scope {
-					authorized = true
-					break
-				}
-			}
+			authorized := slices.Contains(requiredScopes, userRole)
 
 			if !authorized {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Forbidden: Insufficient permissions"})
